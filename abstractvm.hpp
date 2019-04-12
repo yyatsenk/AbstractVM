@@ -45,15 +45,15 @@ class IOperand
     virtual ~IOperand(void) {}
 };
 
-template <typename T>
+//template <typename T>
 class Operand : public IOperand
 {
     public:
-    T operand;
+    int operand;
     OperandType type;
     int getPrecision(void)const;
     OperandType  getType(void)const;
-    void set_Type(T val);
+    void set_Type(int val);
     IOperand const *operator+( IOperand const& rhs )const;// Sumvirtual
     /*IOperand const *operator-( IOperand const& rhs )const;// Differencevirtual
     IOperand const *operator*( IOperand const& rhs )const;// Productvirtual
@@ -74,7 +74,7 @@ class Operand : public IOperand
         std::cout << typeid(operand).name() << std::endl;    //Your answer
         std::cout << sizeof(operand) << std::endl;
     }
-    Operand(T value)
+    Operand(int value)
     {
         operand = value;
         this->set_Type(value);
@@ -100,13 +100,13 @@ class Stack : public std::vector<T>
     //std::list<T> mystack;
     void add()
     {
-        IOperand* res;
+        /*IOperand* res;
         IOperand* res_2;
         const IOperand* res_3;
 
         res = this->at(0);
         res_2 = this->at(1);
-        res_3 = *res + *res_2;
+        res_3 = *res + *res_2;*/
         // auto it = this->begin();
         // this->push_back(*(*this)[0] + *(*this)[1]);
 
@@ -122,8 +122,8 @@ class Stack : public std::vector<T>
     }
 };
 
-template <typename T>
-int Operand<T>::getPrecision(void)const
+//template <typename T>
+int Operand::getPrecision(void)const
 {
     switch(type)
     {
@@ -141,8 +141,8 @@ int Operand<T>::getPrecision(void)const
     return (0);
 }
 
-template <typename T>
-void Operand<T>::set_Type(T val)
+//template <typename T>
+void Operand::set_Type(int val)
 {
     //std::cout << typeid(val).name() << std::endl;
     if (!strcmp(typeid(val).name(),"h"))
@@ -160,8 +160,8 @@ void Operand<T>::set_Type(T val)
         type = OperandType::Double;
 }
 
-template <typename T>
-OperandType  Operand<T>::getType(void)const
+//template <typename T>
+OperandType  Operand::getType(void)const
 {
    /* OperandType op_type;
 
@@ -177,20 +177,20 @@ OperandType  Operand<T>::getType(void)const
         op_type = Double;*/
     return (type);
 }
-template <typename T>
-IOperand const *Operand<T>::operator+( IOperand const& rhs )const
+//template <typename T>
+IOperand const *Operand::operator+( IOperand const& rhs )const
 {
-    Operand<T> *op;
-    op = dynamic_cast<Operand<T> *>(const_cast<IOperand *>(&rhs));
+    Operand *op;
+    op = dynamic_cast<Operand *>(const_cast<IOperand *>(&rhs));
 
     /*int priority_1 = this->getPrecision();
     int priority_2 = op->getPrecision();
-
+    
     if (priority_2 > priority_1)
         this->set_Type(priority_2)*/
     std::cout << op << std::endl;
     //op->set_val(this->operand + op->get_val());
-    return (op);
+    return (new Operand(this->operand + op->operand));
 }
 /*
 template <typename T>
@@ -229,8 +229,8 @@ IOperand const *Operand<T>::operator%( IOperand const& rhs )const
     return (&op);
 }
 */
-template <typename T>
-std::string const& Operand<T>::toString(void)const
+//template <typename T>
+std::string const& Operand::toString(void)const
 {
     //double res;
     //OperandType op_type;
