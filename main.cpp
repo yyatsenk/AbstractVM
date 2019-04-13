@@ -5,28 +5,26 @@ int main(int argv, char **argc)
 {
     int a = 100;
     Stack<IOperand*> b;
-    Operand<int> m((int)100);
-    Operand<int> z((int)100);
+    Operand<int8_t> m(55);
+    Operand<int8_t> z((int8_t)20);
+    Operand<int> g((int)100);
     Operand<int16_t> c((int16_t)12);
-    Operand<int32_t> d((int32_t)300);
+    Operand<int16_t> c2((int16_t)22);
+    Operand<int32_t> i((int16_t)32);
+    Operand<int32_t> d((int32_t)500);
     Operand<float> e((float)1.1);
-    Operand<double> f((double)1.1);
+    Operand<double> f((double)2.11233);
     b.push_back(&m);
     b.push_back(&c);
     b.push_back(&d);
     b.push_back(&e);
+    b.push_back(&m);
     b.push_back(&f);
-    //b.add();
+    //b.pop_back();
+    b.add();
         m+z;
-    /*for(auto v: b)
-    {
-        //Operand *res;
-        OperandType type;
-        type = v->getType();
-        int a = static_cast<int>(type);
-        //res = dynamic_cast<Operand *>(v)
-        std::cout << a << std::endl;
-    }*/
-   std::cout << "int is: " << typeid(int).name() << '\n';
+    b.dump();
+    //b.assert(*(b.createOperand(OperandType::Int8, "55")));
+
     return (0);
 }

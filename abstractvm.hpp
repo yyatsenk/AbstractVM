@@ -8,6 +8,8 @@
 #include <vector>
 #include <regex>
 #include <memory>
+#include <stdlib.h>
+#include <limits>
 //#include "abstractvm_head.hpp"
 
 class MyException : public std::exception
@@ -30,17 +32,16 @@ enum class OperandType
 
 class IOperand
 {   
-    //protected:
-    //double val;
+    
     public:
-    virtual int getPrecision(void)const= 0;// Precision of the type of the instancevirtuale
-    virtual OperandType  getType(void)const= 0;// Type of the instancevirtual
-    virtual IOperand const *operator+( IOperand const& rhs )const= 0;// Sumvirtual
-    /*virtual IOperand const *operator-( IOperand const& rhs )const= 0;// Differencevirtual
-    virtual IOperand const *operator*( IOperand const& rhs )const= 0;// Productvirtual
-    virtual IOperand const *operator/( IOperand const& rhs )const= 0;// Quotientvirtual
-    virtual IOperand const *operator%( IOperand const& rhs )const= 0;// Modulovirtual
-    */virtual std::string const& toString(void)const= 0;// String representation of the instance
+    virtual int getPrecision(void)const= 0;
+    virtual OperandType  getType(void)const= 0;
+    virtual IOperand const *operator+( IOperand const& rhs )const= 0;
+    /*virtual IOperand const *operator-( IOperand const& rhs )const= 0;
+    virtual IOperand const *operator*( IOperand const& rhs )const= 0;
+    virtual IOperand const *operator/( IOperand const& rhs )const= 0;
+    virtual IOperand const *operator%( IOperand const& rhs )const= 0;
+    */virtual std::string const& toString(void)const= 0;
     IOperand(){}
     virtual ~IOperand(void) {}
 };
@@ -48,17 +49,180 @@ class IOperand
 template <typename T>
 class Operand : public IOperand
 {
+    private:
+    IOperand const * createInt8( std::string const & value ) const
+    {
+        int32_t val;
+        int8_t res;
+
+        val = atoi(value.c_str());
+        if (val > 127 || val < -128)
+            throw MyException();
+        else
+            res = static_cast<int8_t>(val);
+        return (new Operand<int8_t>(res));
+    }
+    IOperand const * createInt16( std::string const & value ) const
+    {
+        int32_t val;
+        int16_t res;
+
+        val = atoi(value.c_str());
+        if (val > 32767 || val < -32768)
+            throw MyException();
+        else
+            res = static_cast<int16_t>(val);
+        return (new Operand<int16_t>(res));
+    }
+    IOperand const * createInt32( std::string const & value ) const
+    {
+        int64_t val;
+        int32_t res;
+
+        val = atoll(value.c_str());
+        if (val > 2147483647 || val < -2147483648)
+            throw MyException();
+        else
+            res = static_cast<int32_t>(val);
+        return (new Operand<int32_t>(res));
+    }
+    IOperand const * createFloat( std::string const & value ) const
+    {
+        float res;
+
+        res = atof(value.c_str());
+        //std::cout <<res << "\n";
+        return (new Operand<float>(res));
+    }
+    IOperand const * createDouble( std::string const & value ) const
+    {
+        double res;
+        std::size_t offset = 0; 
+        res = std::stod(value, &offset);
+        //std::cout <<res << "\n";
+        return (new Operand<double>(res));
+    }
     public:
     T operand;
     OperandType type;
     int getPrecision(void)const;
     OperandType  getType(void)const;
     void set_Type(T val);
-    IOperand const *operator+( IOperand const& rhs )const;// Sumvirtual
-    /*IOperand const *operator-( IOperand const& rhs )const;// Differencevirtual
-    IOperand const *operator*( IOperand const& rhs )const;// Productvirtual
-    IOperand const *operator/( IOperand const& rhs )const;// Quotientvirtual
-    IOperand const *operator%( IOperand const& rhs )const;// Modulovirtual
+
+    template <typename T_2>
+    IOperand const *add_temp(IOperand  const &rhs, std::string const &sign) const
+    {
+        Operand<T_2> *op;
+        op = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(&rhs));
+        if (op->type != this->type)
+        {
+            if (sign == "+")
+            {
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand + op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+            }
+            else if (sign == "-")
+            {
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand - op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand - op->operand));
+            }
+            else if (sign == "*")
+            {
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand * op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand * op->operand));
+            }
+            else if (sign == "/")
+            {
+                if (!op->operand)
+                    throw MyException();
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand / op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand / op->operand));
+            }
+            /*else if (op->operand && this->type != OperandType::Float
+                || this->type != OperandType::Double || op->type != OperandType::Float
+                || op->type != OperandType::Double && sign == "%%")
+            {
+                if (!op->operand || this->type == OperandType::Float
+                || this->type == OperandType::Double || op->type == OperandType::Float
+                || op->type == OperandType::Double)
+                    throw MyException();
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand % op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand % op->operand));
+            }*/
+        }
+        return (0);
+    }
+
+    IOperand const *operator+( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "+"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "+"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "+"));
+        else if (t == OperandType::Float)   
+            return (add_temp<float>(rhs, "+"));
+        else   
+            return (add_temp<double>(rhs, "+"));
+        return (0);    
+    }
+    IOperand const *operator-( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "-"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "-"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "-"));
+        else if (t == OperandType::Float)   
+            return (add_temp<float>(rhs, "-"));
+        else   
+            return (add_temp<double>(rhs, "-"));
+        return (0);
+    }
+    IOperand const *operator*( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "-"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "-"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "-"));
+        else if (t == OperandType::Float)   
+            return (add_temp<float>(rhs, "-"));
+        else   
+            return (add_temp<double>(rhs, "-"));
+        return (0);
+    }
+    IOperand const *operator/( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "/"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "/"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "/"));
+        else if (t == OperandType::Float)   
+            return (add_temp<float>(rhs, "/"));
+        else   
+            return (add_temp<double>(rhs, "/"));
+        return (0);
+    }
+    /*IOperand const *operator%( IOperand const& rhs )const;// Modulovirtual
     */std::string const& toString(void)const;
     /*T get_val()const{
         return operand;
@@ -79,48 +243,252 @@ class Operand : public IOperand
         operand = value;
         this->set_Type(value);
     }
+    Operand(const Operand &) = default;
+    
     ~Operand(){}
-    /*Operand &operator=(const Operand &a)
+    IOperand &operator=(const IOperand &a)
     {
-        if (&a == this)
-            return (*this);
+        IOperand *this_one = this;
+        if (&a == this_one)
+            return (*this_one);
         else
         {
-            this->operand = a.get_val();
-            this->type = a.get_type();
-            return (*this);
+            OperandType t;
+            t = a.getType();
+    if (t == OperandType::Int8)
+    {   
+        Operand<int8_t> *op;
+        op = dynamic_cast<Operand<int8_t> *>(const_cast<IOperand *>(&a));
+        this->operand = op->operand;
+        this->type = op->type;
+    }
+    else if (t == OperandType::Int16)
+    {   
+        Operand<int16_t> *op;
+        op = dynamic_cast<Operand<int16_t> *>(const_cast<IOperand *>(&a));
+        this->operand = op->operand;
+        this->type = op->type;
+    }
+    else if (t == OperandType::Int32)
+    {   
+        Operand<int32_t> *op;
+        op = dynamic_cast<Operand<int32_t> *>(const_cast<IOperand *>(&a));
+        
+    }
+    else if (t == OperandType::Float)
+    {   
+        Operand<float> *op;
+        op = dynamic_cast<Operand<float> *>(const_cast<IOperand *>(&a));
+        this->operand = op->operand;
+        this->type = op->type;
+    }
+    else //if (t == OperandType::Double)
+    {   
+        Operand<double> *op;
+        op = dynamic_cast<Operand<double> *>(const_cast<IOperand *>(&a));
+        this->operand = op->operand;
+        this->type = op->type;
+    }
         }
-    }*/
+    }
+    
+    IOperand const * createOperand( OperandType type, std::string const & value ) const
+    {
+        try
+        {
+            switch(type)
+            {
+                case OperandType::Int8 :
+                   return createInt8(value);
+                case OperandType::Int16:
+                    return createInt16(value);
+                case OperandType::Int32:
+                    return createInt32(value);
+                case OperandType::Float:
+                    return createFloat(value);
+                case OperandType::Double:
+                   return createDouble(value);
+                default :
+                   return (0);
+            }
+        }
+        catch(MyException& e)
+        {
+            std::cout << e.what() << '\n';
+        }
+    return (0);
+    }
+    
 };
+
 
 template <typename T>
 class Stack : public std::vector<T>
 {
     public:
-    //std::list<T> mystack;
+
+    template <typename T_2>
+    void assert_temp(IOperand const& rhs)
+    {
+        Operand<T_2> *op;
+        Operand<T_2> *op_2;
+        op = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(&rhs));
+        op_2 = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(this->back()));
+        if (!op_2)
+            throw MyException();
+        else if (op->operand != op_2->operand)
+            throw MyException();
+    }
+
+    template <typename T_3>
+    void dump_temp(IOperand  *rhs)
+    {
+        Operand<T_3> *op;
+        op = dynamic_cast<Operand<T_3> *>(const_cast<IOperand *>(rhs));
+        std::cout << op->operand << std::endl;
+    }
+
+    void dump()
+    {
+        for(auto v: *this)
+        {
+            OperandType t;
+            t = v->getType();
+            
+            if (t == OperandType::Int8)
+                dump_temp<int8_t>(v);
+            else if (t == OperandType::Int16)
+                dump_temp<int16_t>(v);
+            else if (t == OperandType::Int32)
+                dump_temp<int32_t>(v);
+            else if (t == OperandType::Float)
+                dump_temp<float>(v);
+            else
+                dump_temp<double>(v);
+        }
+    }
+    void assert(IOperand const& rhs)
+    {
+        try
+        {  
+            OperandType t;
+            t = rhs.getType();
+            
+            if (t == OperandType::Int8)  
+                assert_temp<int8_t>(rhs);
+            else if (t == OperandType::Int16)
+                assert_temp<int16_t>(rhs);
+            else if (t == OperandType::Int32)
+                assert_temp<int32_t>(rhs);
+            else if (t == OperandType::Float) 
+                assert_temp<float>(rhs);
+            else
+                assert_temp<double>(rhs);
+        }
+        catch(MyException& e)
+        {
+            std::cout << e.what() << '\n';
+        }
+    }
+
     void add()
     {
-        IOperand* res;
-        IOperand* res_2;
-        const IOperand* res_3;
+        try
+        {
+            if (this->size() < 2)
+                throw MyException();
+            
+            const IOperand *res;
+            const IOperand *res_2;
+            const IOperand *res_3;
 
-        res = this->at(0);
-        res_2 = this->at(1);
-        res_3 = *res + *res_2;
-        // auto it = this->begin();
-        // this->push_back(*(*this)[0] + *(*this)[1]);
-
-
+            res = (*this).at(this->size() - 1);
+            res_2 = (*this).at(this->size() - 2);
+            res_3 = *res + *res_2;
+            this->pop_back();
+            this->pop_back();
+            this->push_back(const_cast<IOperand *>(res_3));
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
     }
+    void sub()
+    {
+        try
+        {
+            if (this->size() < 2)
+                throw MyException();
+            const IOperand *res;
+            const IOperand *res_2;
+            const IOperand *res_3;
+
+            res = (*this).at(this->size() - 1);
+            res_2 = (*this).at(this->size() - 2);
+            res_3 = *res - *res_2;
+            this->pop_back();
+            this->pop_back();
+            this->push_back(const_cast<IOperand *>(res_3));
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+    /*void mul()
+    {
+        try
+        {
+            if (this->size() < 2)
+                throw MyException();
+            const IOperand *res;
+            const IOperand *res_2;
+            const IOperand *res_3;
+
+            res = (*this).at(this->size() - 1);
+            res_2 = (*this).at(this->size() - 2);
+            res_3 = *res * *res_2;
+            this->pop_back();
+            this->pop_back();
+            this->push_back(const_cast<IOperand *>(res_3));
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+    void div()
+    {
+        try
+        {
+            if (this->size() < 2)
+                throw MyException();
+            const IOperand *res;
+            const IOperand *res_2;
+            const IOperand *res_3;
+
+            res = (*this).at(this->size() - 1);
+            res_2 = (*this).at(this->size() - 2);
+            res_3 = *res / *res_2;
+            this->pop_back();
+            this->pop_back();
+            this->push_back(const_cast<IOperand *>(res_3));
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }*/
     Stack(T val)
     {
-        //mystack.push_back(val);
     }
     Stack()
     {
         
     }
 };
+
 
 template <typename T>
 int Operand<T>::getPrecision(void)const
@@ -144,15 +512,10 @@ int Operand<T>::getPrecision(void)const
 template <typename T>
 void Operand<T>::set_Type(T val)
 {
-    std::cout << typeid(val).name() << std::endl;
-    //std::cout << typeid(val).name() << std::endl;
-    if (!strcmp(typeid(val).name(),"h"))
+    if (!strcmp(typeid(val).name(),"a"))
         type = OperandType::Int8;
-    else if (!strcmp(typeid(val).name(),"t"))
-    {
+    else if (!strcmp(typeid(val).name(),"s"))
         type = OperandType::Int16;
-        //std::cout << "test" << std::endl;
-    }
     else if (!strcmp(typeid(val).name(),"i") ||!strcmp(typeid(val).name(),"j"))
         type = OperandType::Int32;
     else if (!strcmp(typeid(val).name(),"f"))
@@ -164,65 +527,70 @@ void Operand<T>::set_Type(T val)
 template <typename T>
 OperandType  Operand<T>::getType(void)const
 {
-   /* OperandType op_type;
-
-    if (typeid(operand).name() == "h")
-        op_type = Int8;
-    else if (typeid(operand).name() == "t")
-        op_type = Int16;
-    else if (typeid(operand).name() == "i" ||typeid(operand).name() == "j")
-        op_type = Int32;
-    else if (typeid(operand).name() == "f")
-        op_type = Float;
-    else if (typeid(operand).name() == "d")
-        op_type = Double;*/
     return (type);
 }
-template <typename T>
+/*template <typename T>
 IOperand const *Operand<T>::operator+( IOperand const& rhs )const
 {
     OperandType t;
-    t = this->type;
+    t = rhs.getType();
     if (t == OperandType::Int8)
-    {   Operand<int8_t> *op;
+    {   
+        Operand<int8_t> *op;
         op = dynamic_cast<Operand<int8_t> *>(const_cast<IOperand *>(&rhs));
-        //if (op->type > this->type)
-            return (new Operand<int8_t>(this->operand+op->operand));
+        if (op->type != this->type)
+        {
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(this->operand + op->operand)); 
+            return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+        }
     }
     else if (t == OperandType::Int16)
-    {   Operand<int16_t> *op;
+    {   
+        Operand<int16_t> *op;
         op = dynamic_cast<Operand<int16_t> *>(const_cast<IOperand *>(&rhs));
-        //if (op->type > this->type)
-            return (new Operand<int16_t>(this->operand+op->operand));
+        if (op->type != this->type)
+        {
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(this->operand + op->operand)); 
+            return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+        }
     }
     else if (t == OperandType::Int32)
-    {   Operand<int32_t> *op;
+    {   
+        Operand<int32_t> *op;
         op = dynamic_cast<Operand<int32_t> *>(const_cast<IOperand *>(&rhs));
-        //if (op->type > this->type)
-            return (new Operand<int32_t>(this->operand+op->operand));
+        if (op->type != this->type)
+        {
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(this->operand + op->operand)); 
+            return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+        }
     }
     else if (t == OperandType::Float)
-    {   Operand<float> *op;
+    {   
+        Operand<float> *op;
         op = dynamic_cast<Operand<float> *>(const_cast<IOperand *>(&rhs));
-        //if (op->type > this->type)
-            return (new Operand<float>(this->operand+op->operand));
+        if (op->type != this->type)
+        {
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(this->operand + op->operand)); 
+            return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+        }
     }
     else //if (t == OperandType::Double)
-    {   Operand<double> *op;
+    {   
+        Operand<double> *op;
         op = dynamic_cast<Operand<double> *>(const_cast<IOperand *>(&rhs));
-        //if (op->type > this->type)
-            return (new Operand<double>(this->operand+op->operand));
+        if (op->type != this->type)
+        {
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(this->operand + op->operand)); 
+            return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+        }
     }
-
-    /*int priority_1 = this->getPrecision();
-    int priority_2 = op->getPrecision();
-
-    if (priority_2 > priority_1)
-        this->set_Type(priority_2)*/
-    //std::cout << op << std::endl;
-    //op->set_val(this->operand + op->get_val());
-    //return op;
-}
+    return (0);
+}*/
 /*
 template <typename T>
 IOperand const *Operand<T>::operator-( IOperand const& rhs )const
