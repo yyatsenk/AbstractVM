@@ -37,11 +37,11 @@ class IOperand
     virtual int getPrecision(void)const= 0;
     virtual OperandType  getType(void)const= 0;
     virtual IOperand const *operator+( IOperand const& rhs )const= 0;
-    /*virtual IOperand const *operator-( IOperand const& rhs )const= 0;
+    virtual IOperand const *operator-( IOperand const& rhs )const= 0;
     virtual IOperand const *operator*( IOperand const& rhs )const= 0;
     virtual IOperand const *operator/( IOperand const& rhs )const= 0;
     virtual IOperand const *operator%( IOperand const& rhs )const= 0;
-    */virtual std::string const& toString(void)const= 0;
+    virtual std::string const& toString(void)const= 0;
     IOperand(){}
     virtual ~IOperand(void) {}
 };
@@ -114,13 +114,25 @@ class Operand : public IOperand
     {
         Operand<T_2> *op;
         op = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(&rhs));
-        if (op->type != this->type)
-        {
+        int32_t over_test;
+             //if ()
             if (sign == "+")
             {
-                if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(this->operand + op->operand));
-                return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+                over_test = this->operand + op->operand;
+                if (this->type == OperandType::Float
+                || this->type == OperandType::Double || op->type == OperandType::Float
+                || op->type == OperandType::Double)
+                {    
+                    if (this->type < op->type)
+                        return this->createOperand(op->type, std::to_string(this->operand + op->operand));
+                    return this->createOperand(this->type, std::to_string(this->operand + op->operand));
+                }
+                else
+                {
+                    if (this->type < op->type)
+                        return this->createOperand(op->type, std::to_string(over_test));
+                    return this->createOperand(this->type, std::to_string(over_test));
+                }
             }
             else if (sign == "-")
             {
@@ -142,19 +154,16 @@ class Operand : public IOperand
                     return this->createOperand(op->type, std::to_string(this->operand / op->operand));
                 return this->createOperand(this->type, std::to_string(this->operand / op->operand));
             }
-            /*else if (op->operand && this->type != OperandType::Float
-                || this->type != OperandType::Double || op->type != OperandType::Float
-                || op->type != OperandType::Double && sign == "%%")
+            else if (sign == "%")
             {
                 if (!op->operand || this->type == OperandType::Float
                 || this->type == OperandType::Double || op->type == OperandType::Float
                 || op->type == OperandType::Double)
                     throw MyException();
                 if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(this->operand % op->operand));
-                return this->createOperand(this->type, std::to_string(this->operand % op->operand));
-            }*/
-        }
+                    return this->createOperand(op->type, std::to_string(static_cast<int>(this->operand) % static_cast<int>(op->operand)));
+                return this->createOperand(this->type, std::to_string(static_cast<int>(this->operand) % static_cast<int>(op->operand)));
+            }
         return (0);
     }
 
@@ -222,8 +231,23 @@ class Operand : public IOperand
             return (add_temp<double>(rhs, "/"));
         return (0);
     }
-    /*IOperand const *operator%( IOperand const& rhs )const;// Modulovirtual
-    */std::string const& toString(void)const;
+    IOperand const *operator%( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "%"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "%"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "%"));
+        else if (t == OperandType::Float)
+            return (add_temp<float>(rhs, "%"));
+        else if (t == OperandType::Double)
+            return (add_temp<double>(rhs, "%"));
+        return (0);
+    }
+    std::string const& toString(void)const;
     /*T get_val()const{
         return operand;
     }
@@ -273,7 +297,8 @@ class Operand : public IOperand
     {   
         Operand<int32_t> *op;
         op = dynamic_cast<Operand<int32_t> *>(const_cast<IOperand *>(&a));
-        
+        this->operand = op->operand;
+        this->type = op->type;
     }
     else if (t == OperandType::Float)
     {   
@@ -353,6 +378,8 @@ class Stack : public std::vector<T>
         for(auto v: *this)
         {
             OperandType t;
+            if (v == 0) //!!!!!!!!!!!!!Possible debug
+                continue ;
             t = v->getType();
             
             if (t == OperandType::Int8)
@@ -409,9 +436,11 @@ class Stack : public std::vector<T>
             this->pop_back();
             this->push_back(const_cast<IOperand *>(res_3));
         }
-        catch(const std::exception& e)
+        catch(MyException& e)
         {
             std::cerr << e.what() << '\n';
+            //~Stack();
+            exit(1);
         }
     }
     void sub()
@@ -431,12 +460,12 @@ class Stack : public std::vector<T>
             this->pop_back();
             this->push_back(const_cast<IOperand *>(res_3));
         }
-        catch(const std::exception& e)
+        catch(MyException& e)
         {
             std::cerr << e.what() << '\n';
         }
     }
-    /*void mul()
+    void mul()
     {
         try
         {
@@ -453,7 +482,7 @@ class Stack : public std::vector<T>
             this->pop_back();
             this->push_back(const_cast<IOperand *>(res_3));
         }
-        catch(const std::exception& e)
+        catch(MyException& e)
         {
             std::cerr << e.what() << '\n';
         }
@@ -475,11 +504,52 @@ class Stack : public std::vector<T>
             this->pop_back();
             this->push_back(const_cast<IOperand *>(res_3));
         }
-        catch(const std::exception& e)
+        catch(MyException& e)
         {
             std::cerr << e.what() << '\n';
         }
-    }*/
+    }
+    void mod()
+    {
+        try
+        {
+            if (this->size() < 2)
+                throw MyException();
+            const IOperand *res;
+            const IOperand *res_2;
+            const IOperand *res_3;
+
+            res = (*this).at(this->size() - 1);
+            res_2 = (*this).at(this->size() - 2);
+            res_3 = *res % *res_2;
+            this->pop_back();
+            this->pop_back();
+            this->push_back(const_cast<IOperand *>(res_3));
+        }
+        catch(MyException& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+    void print()
+    {
+        try
+        {  
+            OperandType t;
+            t = this->back()->getType();
+            
+            if (t != OperandType::Int8)
+                throw MyException();
+            Operand<int8_t> *to_output;
+            to_output = dynamic_cast<Operand<int8_t> *>(const_cast<IOperand*>(this->back()));
+            if (to_output)
+                std::cout << static_cast<char>(to_output->operand) << std::endl;
+        }
+        catch(MyException& e)
+        {
+            std::cout << e.what() << '\n';
+        }
+    }
     Stack(T val)
     {
     }
@@ -487,6 +557,8 @@ class Stack : public std::vector<T>
     {
         
     }
+    ~Stack()
+    {}
 };
 
 
