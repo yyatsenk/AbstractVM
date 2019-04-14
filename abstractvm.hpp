@@ -7,19 +7,16 @@
 #include <list>
 #include <vector>
 #include <regex>
-#include <memory>
 #include <stdlib.h>
-#include <limits>
 
-#define MSG_OVER_UNDER_FLOW "Over or under flow happened\n"
-#define MSG_DIV_0 "Div by 0\n"
-#define MSG_ASSERS_NOT_TRUE "Assertion failed\n"
-#define MSG_LESS_2_VAL "Error! Less that two values when an arithmetic instruction is executed\n"
-#define MSG_POP_EMPTY "Error! Pop empty stack\n"
-#define MSG_UNKNOWN_INSTR "Error! Unknown command\n"
-#define MSG_END_ABSENT "Error! Exit or ;; is absent\n"
-#define MSG_PRINT_FAILED "Error! Print failed\n"
-//#include "abstractvm_head.hpp"
+#define MSG_OVER_UNDER_FLOW "Over or under flow happened!\n"
+#define MSG_DIV_0 "Div/Mod by 0!\n"
+#define MSG_ASSERS_NOT_TRUE "Assertion failed!\n"
+#define MSG_LESS_2_VAL "Error! Less that two values when an arithmetic instruction is executed!\n"
+#define MSG_POP_EMPTY "Error! Pop empty stack!\n"
+#define MSG_UNKNOWN_INSTR "Error! Unknown command!\n"
+#define MSG_END_ABSENT "Error! Exit or ;; is absent!\n"
+#define MSG_PRINT_FAILED "Error! Print failed!\n"
 
 class MyException : public std::exception
 {
@@ -122,79 +119,79 @@ class Operand : public IOperand
         Operand<T_2> *op;
         op = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(&rhs));
         int64_t over_test = 0;
-            if (sign == "+")
-            {
-                over_test = static_cast<int64_t>(this->operand) + op->operand;
-                if (this->type == OperandType::Float
-                || this->type == OperandType::Double || op->type == OperandType::Float
-                || op->type == OperandType::Double)
-                {    
-                    if (this->type < op->type)
-                        return this->createOperand(op->type, std::to_string(this->operand + op->operand));
-                    return this->createOperand(this->type, std::to_string(this->operand + op->operand));
-                }
-                else if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(over_test));
-                return this->createOperand(this->type, std::to_string(over_test));
-            }
-            else if (sign == "-")
-            {
-                over_test = static_cast<int64_t>(this->operand) - op->operand;
-                if (this->type == OperandType::Float
-                || this->type == OperandType::Double || op->type == OperandType::Float
-                || op->type == OperandType::Double)
-                {    
-                    if (this->type < op->type)
-                        return this->createOperand(op->type, std::to_string(this->operand - op->operand));
-                    return this->createOperand(this->type, std::to_string(this->operand - op->operand));
-                }
-                else if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(over_test));
-                return this->createOperand(this->type, std::to_string(over_test));
-            }
-            else if (sign == "*")
-            {
-                over_test = static_cast<int64_t>(this->operand) * op->operand;
-                if (this->type == OperandType::Float
-                || this->type == OperandType::Double || op->type == OperandType::Float
-                || op->type == OperandType::Double)
-                {    
-                    if (this->type < op->type)
-                        return this->createOperand(op->type, std::to_string(this->operand * op->operand));
-                    return this->createOperand(this->type, std::to_string(this->operand * op->operand));
-                }
-                else if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(over_test));
-                return this->createOperand(this->type, std::to_string(over_test));
-            }
-            else if (sign == "/")
-            {
-                if (!op->operand)
-                    throw MyException(MSG_DIV_0);
-                over_test = static_cast<int64_t>(this->operand) / op->operand;
-                if (this->type == OperandType::Float
-                || this->type == OperandType::Double || op->type == OperandType::Float
-                || op->type == OperandType::Double)
-                {    
-                    if (this->type < op->type)
-                        return this->createOperand(op->type, std::to_string(this->operand / op->operand));
-                    return this->createOperand(this->type, std::to_string(this->operand / op->operand));
-                }
-                else if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(over_test));
-                return this->createOperand(this->type, std::to_string(over_test));
-            }
-            else if (sign == "%")
-            {
-                if (!op->operand || this->type == OperandType::Float
-                || this->type == OperandType::Double || op->type == OperandType::Float
-                || op->type == OperandType::Double)
-                    throw MyException(MSG_DIV_0);
-                over_test = static_cast<int64_t>(this->operand) % static_cast<int64_t>(op->operand);
+        if (sign == "+")
+        {
+            over_test = static_cast<int64_t>(this->operand) + op->operand;
+            if (this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+            {    
                 if (this->type < op->type)
-                    return this->createOperand(op->type, std::to_string(static_cast<int64_t>(over_test)));
-                return this->createOperand(this->type, std::to_string(static_cast<int64_t>(over_test)));
+                    return this->createOperand(op->type, std::to_string(this->operand + op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand + op->operand));
             }
+            else if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(over_test));
+            return this->createOperand(this->type, std::to_string(over_test));
+        }
+        else if (sign == "-")
+        {
+            over_test = static_cast<int64_t>(this->operand) - op->operand;
+            if (this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+            {    
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand - op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand - op->operand));
+            }
+            else if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(over_test));
+            return this->createOperand(this->type, std::to_string(over_test));
+        }
+        else if (sign == "*")
+        {
+            over_test = static_cast<int64_t>(this->operand) * op->operand;
+            if (this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+            {    
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand * op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand * op->operand));
+            }
+            else if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(over_test));
+            return this->createOperand(this->type, std::to_string(over_test));
+        }
+        else if (sign == "/")
+        {
+            if (!op->operand)
+                throw MyException(MSG_DIV_0);
+            over_test = static_cast<int64_t>(this->operand) / op->operand;
+            if (this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+            {    
+                if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(this->operand / op->operand));
+                return this->createOperand(this->type, std::to_string(this->operand / op->operand));
+            }
+                else if (this->type < op->type)
+                    return this->createOperand(op->type, std::to_string(over_test));
+                return this->createOperand(this->type, std::to_string(over_test));
+            }
+        else if (sign == "%")
+        {
+            if (!op->operand || this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+                throw MyException(MSG_DIV_0);
+            over_test = static_cast<int64_t>(this->operand) % static_cast<int64_t>(op->operand);
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(static_cast<int64_t>(over_test)));
+            return this->createOperand(this->type, std::to_string(static_cast<int64_t>(over_test)));
+        }
         return (0);
     }
 
@@ -290,8 +287,6 @@ class Operand : public IOperand
     }*/
     Operand()
     {
-        std::cout << typeid(operand).name() << std::endl;
-        std::cout << sizeof(operand) << std::endl;
     }
     Operand(T value)
     {
@@ -357,26 +352,25 @@ class Operand : public IOperand
     
     IOperand const * createOperand( OperandType type, std::string const & value ) const
     {
-            switch(type)
-            {
-                case OperandType::Int8 :
-                   return createInt8(value);
-                case OperandType::Int16:
-                    return createInt16(value);
-                case OperandType::Int32:
-                    return createInt32(value);
-                case OperandType::Float:
-                    return createFloat(value);
-                case OperandType::Double:
-                   return createDouble(value);
-                default :
-                   return (0);
-            }
-    return (0);
+        switch(type)
+        {
+            case OperandType::Int8 :
+               return createInt8(value);
+            case OperandType::Int16:
+                return createInt16(value);
+            case OperandType::Int32:
+                return createInt32(value);
+            case OperandType::Float:
+                return createFloat(value);
+            case OperandType::Double:
+                return createDouble(value);
+            default :
+                return (0);
+        }
+        return (0);
     }
     
 };
-
 
 template <typename T>
 class Stack : public std::vector<T>
@@ -429,26 +423,25 @@ class Stack : public std::vector<T>
     }
     void assert(IOperand const& rhs)
     {
-            OperandType t;
-            t = rhs.getType();
-            
-            if (t == OperandType::Int8)  
-                assert_temp<int8_t>(rhs);
-            else if (t == OperandType::Int16)
-                assert_temp<int16_t>(rhs);
-            else if (t == OperandType::Int32)
-                assert_temp<int32_t>(rhs);
-            else if (t == OperandType::Float) 
-                assert_temp<float>(rhs);
-            else
-                assert_temp<double>(rhs);
+        OperandType t;
+        t = rhs.getType();
+  
+        if (t == OperandType::Int8)  
+            assert_temp<int8_t>(rhs);
+        else if (t == OperandType::Int16)
+            assert_temp<int16_t>(rhs);
+        else if (t == OperandType::Int32)
+            assert_temp<int32_t>(rhs);
+        else if (t == OperandType::Float) 
+            assert_temp<float>(rhs);
+        else
+            assert_temp<double>(rhs);
     }
 
     void add()
     {
         if (this->size() < 2)
             throw MyException(MSG_LESS_2_VAL);
-            
         const IOperand *res;
         const IOperand *res_2;
         const IOperand *res_3;
@@ -462,77 +455,77 @@ class Stack : public std::vector<T>
     }
     void sub()
     {
-             if (this->size() < 2)
-                throw MyException(MSG_LESS_2_VAL);
-            const IOperand *res;
-            const IOperand *res_2;
-            const IOperand *res_3;
+        if (this->size() < 2)
+            throw MyException(MSG_LESS_2_VAL);
+        const IOperand *res;
+        const IOperand *res_2;
+        const IOperand *res_3;
 
-            res = (*this).at(this->size() - 1);
-            res_2 = (*this).at(this->size() - 2);
-            res_3 = *res - *res_2;
-            this->pop_back();
-            this->pop_back();
-            this->push_back(const_cast<IOperand *>(res_3));
+        res = (*this).at(this->size() - 1);
+        res_2 = (*this).at(this->size() - 2);
+        res_3 = *res - *res_2;
+        this->pop_back();
+        this->pop_back();
+        this->push_back(const_cast<IOperand *>(res_3));
     }
     void mul()
     {
-            if (this->size() < 2)
-                throw MyException(MSG_LESS_2_VAL);
-            const IOperand *res;
-            const IOperand *res_2;
-            const IOperand *res_3;
+        if (this->size() < 2)
+            throw MyException(MSG_LESS_2_VAL);
+        const IOperand *res;
+        const IOperand *res_2;
+        const IOperand *res_3;
 
-            res = (*this).at(this->size() - 1);
-            res_2 = (*this).at(this->size() - 2);
-            res_3 = *res * *res_2;
-            this->pop_back();
-            this->pop_back();
-            this->push_back(const_cast<IOperand *>(res_3));
+        res = (*this).at(this->size() - 1);
+        res_2 = (*this).at(this->size() - 2);
+        res_3 = *res * *res_2;
+        this->pop_back();
+        this->pop_back();
+        this->push_back(const_cast<IOperand *>(res_3));
     }
     void div()
     {
-            if (this->size() < 2)
-                throw MyException(MSG_LESS_2_VAL);
-            const IOperand *res;
-            const IOperand *res_2;
-            const IOperand *res_3;
+        if (this->size() < 2)
+            throw MyException(MSG_LESS_2_VAL);
+        const IOperand *res;
+        const IOperand *res_2;
+        const IOperand *res_3;
 
-            res = (*this).at(this->size() - 1);
-            res_2 = (*this).at(this->size() - 2);
-            res_3 = *res_2 / *res;
-            this->pop_back();
-            this->pop_back();
-            this->push_back(const_cast<IOperand *>(res_3));
+        res = (*this).at(this->size() - 1);
+        res_2 = (*this).at(this->size() - 2);
+        res_3 = *res_2 / *res;
+        this->pop_back();
+        this->pop_back();
+        this->push_back(const_cast<IOperand *>(res_3));
     }
     void mod()
     {
-            if (this->size() < 2)
-                throw MyException(MSG_LESS_2_VAL);
-            const IOperand *res;
-            const IOperand *res_2;
-            const IOperand *res_3;
+        if (this->size() < 2)
+            throw MyException(MSG_LESS_2_VAL);
+        const IOperand *res;
+        const IOperand *res_2;
+        const IOperand *res_3;
 
-            res = (*this).at(this->size() - 1);
-            res_2 = (*this).at(this->size() - 2);
-            res_3 = *res_2 % *res;
-            this->pop_back();
-            this->pop_back();
-            this->push_back(const_cast<IOperand *>(res_3));
+        res = (*this).at(this->size() - 1);
+        res_2 = (*this).at(this->size() - 2);
+        res_3 = *res_2 % *res;
+        this->pop_back();
+        this->pop_back();
+        this->push_back(const_cast<IOperand *>(res_3));
     }
     void print()
     {
-            OperandType t;
-            if (this->size() == 0)
-                throw MyException(MSG_PRINT_FAILED);
-            t = this->back()->getType();
-            
-            if (t != OperandType::Int8)
-                throw MyException(MSG_PRINT_FAILED);
-            Operand<int8_t> *to_output;
-            to_output = dynamic_cast<Operand<int8_t> *>(const_cast<IOperand*>(this->back()));
-            if (to_output)
-                std::cout << static_cast<char>(to_output->operand) << std::endl;
+        OperandType t;
+        if (this->size() == 0)
+            throw MyException(MSG_PRINT_FAILED);
+        t = this->back()->getType();
+   
+        if (t != OperandType::Int8)
+            throw MyException(MSG_PRINT_FAILED);
+        Operand<int8_t> *to_output;
+        to_output = dynamic_cast<Operand<int8_t> *>(const_cast<IOperand*>(this->back()));
+        if (to_output)
+            std::cout << static_cast<char>(to_output->operand) << std::endl;
     }
     Stack(T val)
     {

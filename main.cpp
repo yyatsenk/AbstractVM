@@ -20,12 +20,25 @@ int is_valid_command(std::string &mystr, int &end_found)
             return (1);
         throw MyException(MSG_UNKNOWN_INSTR);
     }
-     catch (std::regex_error& e) {
+    catch (std::regex_error& e)
+    {
          std::cout << "Regexp error\n";
     }
     return (0);
 }
 
+template <typename TT>
+IOperand *get_IOperand(int64_t min, int64_t max, std::string str)
+{
+    IOperand *val;
+    int64_t over_test;
+    std::string num = str.substr(str.find("(", 0) + 1, str.size() - 1);
+    over_test = atoll(num.c_str());
+    if (over_test < min || over_test > max)
+        throw MyException(MSG_OVER_UNDER_FLOW);
+    val = new Operand<TT>(atoi(num.c_str()));
+    return (val);
+}
 
 void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
 {
@@ -68,20 +81,17 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
             IOperand *val;
             if (std::regex_search(str, std::regex("int8")))
             {
-                std::string num = str.substr(str.find("(", 0) + 1, str.size() - 1);
-                val = new Operand<int8_t>(atoi(num.c_str()));
+                val = get_IOperand<int8_t>((int64_t)-128, (int64_t)127, str);
                 mystack.push_back(val);
             }
             else if (std::regex_search(str, std::regex("int16")))
             {
-                std::string num = str.substr(str.find("(", 0) + 1, str.size() - 1);
-                val = new Operand<int16_t>(atoi(num.c_str()));
+                val = get_IOperand<int16_t>((int64_t)-32768, (int64_t)32767, str);
                 mystack.push_back(val);
             }
             else if (std::regex_search(str, std::regex("int32")))
             {
-                std::string num = str.substr(str.find("(", 0) + 1, str.size() - 1);
-                val = new Operand<int32_t>(atoi(num.c_str()));
+                val = get_IOperand<int32_t>((int64_t)-2147483648, (int64_t)2147483647, str);
                 mystack.push_back(val);
             }
             else if (std::regex_search(str, std::regex("float")))
