@@ -18,7 +18,6 @@
 #define MSG_POP_EMPTY "Error! Pop empty stack\n"
 #define MSG_UNKNOWN_INSTR "Error! Unknown command\n"
 #define MSG_END_ABSENT "Error! Exit or ;; is absent\n"
-//#include "abstractvm_head.hpp"
 
 class MyException : public std::exception
 {
@@ -566,7 +565,6 @@ int Operand<T>::getPrecision(void)const
 template <typename T>
 void Operand<T>::set_Type(T val)
 {
-    //std::cout << typeid(val).name() << std::endl;
     if (!strcmp(typeid(val).name(),"a"))
         type = OperandType::Int8;
     else if (!strcmp(typeid(val).name(),"s"))

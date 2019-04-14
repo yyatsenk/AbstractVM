@@ -10,4 +10,15 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "abstractvm.hpp"
 
+MyException::MyException()
+    {
+    }
+    MyException::MyException(const char *msge):msg(msge)
+    {    
+    }
+    const char * MyException::what () {
+      return msg;
+   }
+	MyException::~MyException(){}
