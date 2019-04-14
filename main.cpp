@@ -1,7 +1,7 @@
 
 #include "abstractvm.hpp"
 
-int is_valid_command(std::string &mystr, std::list<std::string> &commands, int &end_found)
+int is_valid_command(std::string &mystr, int &end_found)
 {
     std::regex re_command_no_args("^(pop|dump|add|sub|mul|div|mod|print)[ ]?(;.+)?");
     std::regex re_with_type("^(push |assert )(int(8|16|32)([(][-]?[0-9]+[)])|float[(][-]?[0-9]+.[0-9]+[)]|double[(][-]?[0-9]+.[0-9]+[)])[ ]?(;.+)?");
@@ -16,9 +16,7 @@ int is_valid_command(std::string &mystr, std::list<std::string> &commands, int &
             end_found = 1;
             return (0);
         }
-        else if (std::regex_match(mystr, re_command_no_args))
-            return (1);
-        else if (std::regex_match(mystr, re_with_type))
+        else if (std::regex_match(mystr, re_command_no_args) || std::regex_match(mystr, re_with_type))
             return (1);
         throw MyException(MSG_UNKNOWN_INSTR);
     }
@@ -36,13 +34,12 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
     while(!end_found)
     {
         getline (std::cin, str); 
-        if (is_valid_command(str, commands, end_found) == 1)
+        if (is_valid_command(str, end_found) == 1)
             commands.push_back(str);
     }
     for (auto &s : commands)
     {
         std::string str = s.substr(0, s.find(";", 0));
-        std::cout << str << std::endl;
         if (std::regex_search(str, std::regex("^dump")))
             mystack.dump();
         else if (std::regex_search(str, std::regex("^print")))
@@ -69,7 +66,6 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
         else if (std::regex_search(str, std::regex("^push")))
         {
             IOperand *val;
-            std::cout << "success\n";
             if (std::regex_search(str, std::regex("int8")))
             {
                 std::string num = str.substr(str.find("(", 0) + 1, str.size() - 1);
@@ -104,7 +100,6 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
         else if (std::regex_search(str, std::regex("^assert")))
         {
             IOperand *val;
-            std::cout << "success\n";
             if (std::regex_search(str, std::regex("int8")))
             {
                 std::string num = str.substr(str.find("(", 0) + 1, str.size() - 1);
@@ -140,7 +135,7 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
 }
 
 
-int main(int argv, char **argc)
+int main()
 {
     std::list<std::string> commands;
     try

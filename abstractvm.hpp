@@ -18,6 +18,7 @@
 #define MSG_POP_EMPTY "Error! Pop empty stack\n"
 #define MSG_UNKNOWN_INSTR "Error! Unknown command\n"
 #define MSG_END_ABSENT "Error! Exit or ;; is absent\n"
+#define MSG_PRINT_FAILED "Error! Print failed\n"
 //#include "abstractvm_head.hpp"
 
 class MyException : public std::exception
@@ -65,7 +66,7 @@ class Operand : public IOperand
 
         val = atoi(value.c_str());
         if (val > 127 || val < -128)
-            throw MyException();
+            throw MyException(MSG_OVER_UNDER_FLOW);
         else
             res = static_cast<int8_t>(val);
         return (new Operand<int8_t>(res));
@@ -106,7 +107,6 @@ class Operand : public IOperand
         double res;
         std::size_t offset = 0; 
         res = std::stod(value, &offset);
-        //std::cout <<res << "\n";
         return (new Operand<double>(res));
     }
     public:
@@ -122,7 +122,6 @@ class Operand : public IOperand
         Operand<T_2> *op;
         op = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(&rhs));
         int64_t over_test = 0;
-             //if ()
             if (sign == "+")
             {
                 over_test = static_cast<int64_t>(this->operand) + op->operand;
@@ -291,7 +290,7 @@ class Operand : public IOperand
     }*/
     Operand()
     {
-        std::cout << typeid(operand).name() << std::endl;    //Your answer
+        std::cout << typeid(operand).name() << std::endl;
         std::cout << sizeof(operand) << std::endl;
     }
     Operand(T value)
@@ -306,7 +305,6 @@ class Operand : public IOperand
         op = dynamic_cast<Operand<T_4> *>(const_cast<IOperand *>(&a));
         this->operand = op->operand;
         this->set_Type(this->operand);
-        //this->type = op->type;
     }
     Operand(const IOperand &a)
     {
@@ -390,6 +388,8 @@ class Stack : public std::vector<T>
     {
         Operand<T_2> *op;
         Operand<T_2> *op_2;
+        if (this->size() == 0)
+            throw MyException(MSG_ASSERS_NOT_TRUE);
         op = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(&rhs));
         op_2 = dynamic_cast<Operand<T_2> *>(const_cast<IOperand *>(this->back()));
         if (!op_2)
@@ -447,7 +447,7 @@ class Stack : public std::vector<T>
     void add()
     {
         if (this->size() < 2)
-            throw MyException();
+            throw MyException(MSG_LESS_2_VAL);
             
         const IOperand *res;
         const IOperand *res_2;
@@ -463,7 +463,7 @@ class Stack : public std::vector<T>
     void sub()
     {
              if (this->size() < 2)
-                throw MyException();
+                throw MyException(MSG_LESS_2_VAL);
             const IOperand *res;
             const IOperand *res_2;
             const IOperand *res_3;
@@ -478,7 +478,7 @@ class Stack : public std::vector<T>
     void mul()
     {
             if (this->size() < 2)
-                throw MyException();
+                throw MyException(MSG_LESS_2_VAL);
             const IOperand *res;
             const IOperand *res_2;
             const IOperand *res_3;
@@ -493,14 +493,14 @@ class Stack : public std::vector<T>
     void div()
     {
             if (this->size() < 2)
-                throw MyException();
+                throw MyException(MSG_LESS_2_VAL);
             const IOperand *res;
             const IOperand *res_2;
             const IOperand *res_3;
 
             res = (*this).at(this->size() - 1);
             res_2 = (*this).at(this->size() - 2);
-            res_3 = *res / *res_2;
+            res_3 = *res_2 / *res;
             this->pop_back();
             this->pop_back();
             this->push_back(const_cast<IOperand *>(res_3));
@@ -508,14 +508,14 @@ class Stack : public std::vector<T>
     void mod()
     {
             if (this->size() < 2)
-                throw MyException();
+                throw MyException(MSG_LESS_2_VAL);
             const IOperand *res;
             const IOperand *res_2;
             const IOperand *res_3;
 
             res = (*this).at(this->size() - 1);
             res_2 = (*this).at(this->size() - 2);
-            res_3 = *res % *res_2;
+            res_3 = *res_2 % *res;
             this->pop_back();
             this->pop_back();
             this->push_back(const_cast<IOperand *>(res_3));
@@ -523,10 +523,12 @@ class Stack : public std::vector<T>
     void print()
     {
             OperandType t;
+            if (this->size() == 0)
+                throw MyException(MSG_PRINT_FAILED);
             t = this->back()->getType();
             
             if (t != OperandType::Int8)
-                throw MyException();
+                throw MyException(MSG_PRINT_FAILED);
             Operand<int8_t> *to_output;
             to_output = dynamic_cast<Operand<int8_t> *>(const_cast<IOperand*>(this->back()));
             if (to_output)

@@ -15,7 +15,7 @@ NAME = avm
 SRCS := main.cpp 
 SRCS +=	myexcept.cpp 
 
-FLAGS =  #-Wall -Werror -Wextra 
+FLAGS =  -Wall -Werror -Wextra 
 
 OBJ = $(SRCS:.c=.o)
 

@@ -3,13 +3,21 @@
 ; -------------
 
 push int32(42)
-push int32(33)
+push int32(322)
+push int8(126)
+;push int8(-200)
 add
-push float(44.55)
-mul
 push double(42.42)
-push int32(42)
-pop
+push int8(42)
+push int8(5)
+;pop
+;pop
+;pop
+;pop
+mod
+;div 
+
 dump
-assert double(42.42)
+print
+assert int8(2)
 exit
