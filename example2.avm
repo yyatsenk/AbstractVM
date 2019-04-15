@@ -10,14 +10,16 @@ add
 push double(42.42)
 push int8(42)
 push int8(55)
+push double(33.3322)
 ;pop
 ;pop
+;;pop
 ;pop
-;pop
-mod
+
+;mod
 ;div 
 
 dump
-print
-assert int8(2)
+;print
+assert double(33.3322)
 exit

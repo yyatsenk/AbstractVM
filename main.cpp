@@ -9,13 +9,13 @@ int is_valid_command(std::string &mystr, int &end_found)
     std::regex re_comment("^;.+");
 
     try {
-        if (std::regex_match(mystr, re_comment) || mystr == "")
-            return (2);
-        else if (std::regex_match(mystr, re_end))
+        if (std::regex_match(mystr, re_end))
         {
             end_found = 1;
             return (0);
         }
+        else if (std::regex_match(mystr, re_comment) || mystr == "")
+            return (2);
         else if (std::regex_match(mystr, re_command_no_args) || std::regex_match(mystr, re_with_type))
             return (1);
         throw MyException(MSG_UNKNOWN_INSTR);

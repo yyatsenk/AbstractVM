@@ -30,11 +30,11 @@ class MyException : public std::exception
 
 enum class OperandType
 {
-    Int8 = 1,
-    Int16 = 2,
-    Int32 = 4,
-    Float = 5,
-    Double = 8
+    Int8 = 0,
+    Int16 = 1,
+    Int32 = 2,
+    Float = 3,
+    Double = 4
 };
 
 class IOperand
@@ -106,6 +106,13 @@ class Operand : public IOperand
         res = std::stod(value, &offset);
         return (new Operand<double>(res));
     }
+    IOperand const* (Operand::*createType[5])(std::string const & value )const = {
+        &Operand<T>::createInt8,
+        &Operand<T>::createInt16,
+        &Operand<T>::createInt32,
+        &Operand<T>::createFloat,
+        &Operand<T>::createDouble
+    };
     public:
     T operand;
     OperandType type;
@@ -276,15 +283,6 @@ class Operand : public IOperand
         return (0);
     }
     std::string const& toString(void)const;
-    /*T get_val()const{
-        return operand;
-    }
-    void set_val(T value){
-        operand = value;
-    }
-    OperandType get_type()const{
-        return type;
-    }*/
     Operand()
     {
     }
@@ -323,7 +321,6 @@ class Operand : public IOperand
         Operand<T_3> *op;
         op = dynamic_cast<Operand<T_3> *>(const_cast<IOperand *>(&a));
         this->operand = op->operand;
-        //this->type = op->type;
     }
 
     ~Operand(){}
@@ -352,21 +349,9 @@ class Operand : public IOperand
     
     IOperand const * createOperand( OperandType type, std::string const & value ) const
     {
-        switch(type)
-        {
-            case OperandType::Int8 :
-               return createInt8(value);
-            case OperandType::Int16:
-                return createInt16(value);
-            case OperandType::Int32:
-                return createInt32(value);
-            case OperandType::Float:
-                return createFloat(value);
-            case OperandType::Double:
-                return createDouble(value);
-            default :
-                return (0);
-        }
+        unsigned int t = static_cast<int>(type);
+        if (t >= 0 && t <= 4)
+            return (this->*createType[t])(value);
         return (0);
     }
     
@@ -405,8 +390,8 @@ class Stack : public std::vector<T>
         for(auto v = this->rbegin(); v != this->rend(); ++v)
         {
             OperandType t;
-            //if (v == 0) //!!!!!!!!!!!!!Possible debug
-            //    continue ;
+            if (*v == 0)
+                break ;
             t = (*v)->getType();
             
             if (t == OperandType::Int8)
@@ -561,7 +546,6 @@ int Operand<T>::getPrecision(void)const
 template <typename T>
 void Operand<T>::set_Type(T val)
 {
-    //std::cout << typeid(val).name() << std::endl;
     if (!strcmp(typeid(val).name(),"a"))
         type = OperandType::Int8;
     else if (!strcmp(typeid(val).name(),"s"))
