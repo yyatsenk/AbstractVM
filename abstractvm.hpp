@@ -8,6 +8,7 @@
 #include <vector>
 #include <regex>
 #include <stdlib.h>
+#include <functional>
 
 #define MSG_OVER_UNDER_FLOW "Over or under flow happened!\n"
 #define MSG_DIV_0 "Div/Mod by 0!\n"
@@ -314,7 +315,6 @@ class Operand : public IOperand
         else
             copy_temp<double>(a);
     }
-
     template <typename T_3>
     void assign_temp(const IOperand &a)
     {
@@ -361,6 +361,30 @@ template <typename T>
 class Stack : public std::vector<T>
 {
     public:
+    std::function<void(char)> command = [this](char sign) mutable -> void
+    {
+        if (this->size() < 2)
+            throw MyException(MSG_LESS_2_VAL);
+        const IOperand *res;
+        const IOperand *res_2;
+        const IOperand *res_3;
+
+        res = (*this).at(this->size() - 1);
+        res_2 = (*this).at(this->size() - 2);
+        if (sign == '+')
+            res_3 = *res + *res_2;
+        else if (sign == '-')
+            res_3 = *res - *res_2;
+        else if (sign == '*')
+            res_3 = *res * *res_2;
+        else if (sign == '/')
+            res_3 = *res_2 - *res;
+        else if (sign == '%')
+            res_3 = *res_2 % *res;
+        this->pop_back();
+        this->pop_back();
+        this->push_back(const_cast<IOperand *>(res_3));
+    };
 
     template <typename T_2>
     void assert_temp(IOperand const& rhs)
@@ -425,78 +449,23 @@ class Stack : public std::vector<T>
 
     void add()
     {
-        if (this->size() < 2)
-            throw MyException(MSG_LESS_2_VAL);
-        const IOperand *res;
-        const IOperand *res_2;
-        const IOperand *res_3;
-
-        res = (*this).at(this->size() - 1);
-        res_2 = (*this).at(this->size() - 2);
-        res_3 = *res + *res_2;
-        this->pop_back();
-        this->pop_back();
-        this->push_back(const_cast<IOperand *>(res_3));
+        command('+');
     }
     void sub()
     {
-        if (this->size() < 2)
-            throw MyException(MSG_LESS_2_VAL);
-        const IOperand *res;
-        const IOperand *res_2;
-        const IOperand *res_3;
-
-        res = (*this).at(this->size() - 1);
-        res_2 = (*this).at(this->size() - 2);
-        res_3 = *res - *res_2;
-        this->pop_back();
-        this->pop_back();
-        this->push_back(const_cast<IOperand *>(res_3));
+        command('-');
     }
     void mul()
     {
-        if (this->size() < 2)
-            throw MyException(MSG_LESS_2_VAL);
-        const IOperand *res;
-        const IOperand *res_2;
-        const IOperand *res_3;
-
-        res = (*this).at(this->size() - 1);
-        res_2 = (*this).at(this->size() - 2);
-        res_3 = *res * *res_2;
-        this->pop_back();
-        this->pop_back();
-        this->push_back(const_cast<IOperand *>(res_3));
+        command('*');
     }
     void div()
     {
-        if (this->size() < 2)
-            throw MyException(MSG_LESS_2_VAL);
-        const IOperand *res;
-        const IOperand *res_2;
-        const IOperand *res_3;
-
-        res = (*this).at(this->size() - 1);
-        res_2 = (*this).at(this->size() - 2);
-        res_3 = *res_2 / *res;
-        this->pop_back();
-        this->pop_back();
-        this->push_back(const_cast<IOperand *>(res_3));
+        command('/');
     }
     void mod()
     {
-        if (this->size() < 2)
-            throw MyException(MSG_LESS_2_VAL);
-        const IOperand *res;
-        const IOperand *res_2;
-        const IOperand *res_3;
-
-        res = (*this).at(this->size() - 1);
-        res_2 = (*this).at(this->size() - 2);
-        res_3 = *res_2 % *res;
-        this->pop_back();
-        this->pop_back();
-        this->push_back(const_cast<IOperand *>(res_3));
+        command('%');
     }
     void print()
     {
@@ -519,6 +488,8 @@ class Stack : public std::vector<T>
     {
         
     }
+    Stack(const Stack<T> &var) = default;
+    Stack<T>& operator=(const Stack<T> &var ) = default;
     ~Stack()
     {}
 };

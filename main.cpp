@@ -22,7 +22,7 @@ int is_valid_command(std::string &mystr, int &end_found)
     }
     catch (std::regex_error& e)
     {
-         std::cout << "Regexp error\n";
+        std::cout << "Regexp error\n";
     }
     return (0);
 }
@@ -155,7 +155,7 @@ int main()
     }
     catch(MyException& e)
     {
-       std::cerr << e.what() << '\n'; 
+        std::cerr << e.what() << '\n'; 
     }
     return (0);
 }
