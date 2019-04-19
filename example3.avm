@@ -1,0 +1,18 @@
+; -------------
+; bonus.avm -
+; -------------
+
+push int8(15) ; 1111
+push int16(10) ; 1010
+;push float(12.1)
+
+;and ; 1010 = 10
+;xor ; 0101 = 5
+or ; 1111 = 15 
+
+dump
+
+;assert int16(10)
+;assert int16(5)
+assert int16(15)
+exit

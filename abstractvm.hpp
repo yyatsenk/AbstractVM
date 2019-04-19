@@ -18,6 +18,7 @@
 #define MSG_UNKNOWN_INSTR "Error! Unknown command!\n"
 #define MSG_END_ABSENT "Error! Exit or ;; is absent!\n"
 #define MSG_PRINT_FAILED "Error! Print failed!\n"
+#define MSG_BIT_OPERATION_FLOAT "Error! No bit operations for floats!\n"
 
 class MyException : public std::exception
 {
@@ -51,6 +52,11 @@ class IOperand
     virtual std::string const& toString(void)const= 0;
     IOperand(){}
     virtual ~IOperand(void) {}
+
+    /*BONUS*/
+    virtual IOperand const *operator&( IOperand const& rhs )const= 0;
+    virtual IOperand const *operator|( IOperand const& rhs )const= 0;
+    virtual IOperand const *operator^( IOperand const& rhs )const= 0;
 };
 
 template <typename T>
@@ -200,6 +206,39 @@ class Operand : public IOperand
                 return this->createOperand(op->type, std::to_string(static_cast<int64_t>(over_test)));
             return this->createOperand(this->type, std::to_string(static_cast<int64_t>(over_test)));
         }
+        else if (sign == "&")
+        {
+            if (!op->operand || this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+                throw MyException(MSG_BIT_OPERATION_FLOAT);
+            over_test = static_cast<int64_t>(this->operand) & static_cast<int64_t>(op->operand);
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(static_cast<int64_t>(over_test)));
+            return this->createOperand(this->type, std::to_string(static_cast<int64_t>(over_test)));
+        }
+        else if (sign == "|")
+        {
+            if (!op->operand || this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+                throw MyException(MSG_BIT_OPERATION_FLOAT);
+            over_test = static_cast<int64_t>(this->operand) | static_cast<int64_t>(op->operand);
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(static_cast<int64_t>(over_test)));
+            return this->createOperand(this->type, std::to_string(static_cast<int64_t>(over_test)));
+        }
+        else if (sign == "^")
+        {
+            if (!op->operand || this->type == OperandType::Float
+            || this->type == OperandType::Double || op->type == OperandType::Float
+            || op->type == OperandType::Double)
+                throw MyException(MSG_BIT_OPERATION_FLOAT);
+            over_test = static_cast<int64_t>(this->operand) ^ static_cast<int64_t>(op->operand);
+            if (this->type < op->type)
+                return this->createOperand(op->type, std::to_string(static_cast<int64_t>(over_test)));
+            return this->createOperand(this->type, std::to_string(static_cast<int64_t>(over_test)));
+        }
         return (0);
     }
 
@@ -281,6 +320,54 @@ class Operand : public IOperand
             return (add_temp<float>(rhs, "%"));
         else if (t == OperandType::Double)
             return (add_temp<double>(rhs, "%"));
+        return (0);
+    }
+    IOperand const *operator&( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "&"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "&"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "&"));
+        else if (t == OperandType::Float)
+            return (add_temp<float>(rhs, "&"));
+        else if (t == OperandType::Double)
+            return (add_temp<double>(rhs, "&"));
+        return (0);
+    }
+    IOperand const *operator|( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "|"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "|"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "|"));
+        else if (t == OperandType::Float)
+            return (add_temp<float>(rhs, "|"));
+        else if (t == OperandType::Double)
+            return (add_temp<double>(rhs, "|"));
+        return (0);
+    }
+    IOperand const *operator^( IOperand const& rhs )const
+    {
+        OperandType t;
+        t = rhs.getType();
+        if (t == OperandType::Int8)
+            return (add_temp<int8_t>(rhs, "^"));
+        else if (t == OperandType::Int16)
+            return (add_temp<int16_t>(rhs, "^"));
+        else if (t == OperandType::Int32)
+            return (add_temp<int32_t>(rhs, "^"));
+        else if (t == OperandType::Float)
+            return (add_temp<float>(rhs, "^"));
+        else if (t == OperandType::Double)
+            return (add_temp<double>(rhs, "^"));
         return (0);
     }
     std::string const& toString(void)const;
@@ -381,6 +468,12 @@ class Stack : public std::vector<T>
             res_3 = *res_2 - *res;
         else if (sign == '%')
             res_3 = *res_2 % *res;
+        else if (sign == '&')
+            res_3 = *res & *res_2;
+        else if (sign == '|')
+            res_3 = *res | *res_2;
+        else if (sign == '^')
+            res_3 = *res ^ *res_2;
         this->pop_back();
         this->pop_back();
         this->push_back(const_cast<IOperand *>(res_3));
@@ -466,6 +559,18 @@ class Stack : public std::vector<T>
     void mod()
     {
         command('%');
+    }
+    void b_and()
+    {
+        command('&');
+    }
+    void b_or()
+    {
+        command('|');
+    }
+    void b_xor()
+    {
+        command('^');
     }
     void print()
     {

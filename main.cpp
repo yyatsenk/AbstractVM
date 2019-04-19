@@ -1,9 +1,9 @@
 
 #include "abstractvm.hpp"
 
-int is_valid_command(std::string &mystr, int &end_found)
+int is_valid_command(std::string &mystr, int &end_found, int line)
 {
-    std::regex re_command_no_args("^(pop|dump|add|sub|mul|div|mod|print)[ ]?(;.+)?");
+    std::regex re_command_no_args("^(pop|dump|add|sub|mul|div|mod|print|and|or|xor)[ ]?(;.+)?");
     std::regex re_with_type("^(push |assert )(int(8|16|32)([(][-]?[0-9]+[)])|float[(][-]?[0-9]+.[0-9]+[)]|double[(][-]?[0-9]+.[0-9]+[)])[ ]?(;.+)?");
     std::regex re_end("^(exit|;;)$");
     std::regex re_comment("^;.+");
@@ -18,6 +18,7 @@ int is_valid_command(std::string &mystr, int &end_found)
             return (2);
         else if (std::regex_match(mystr, re_command_no_args) || std::regex_match(mystr, re_with_type))
             return (1);
+        std::cout << "Line " << line << ": ";
         throw MyException(MSG_UNKNOWN_INSTR);
     }
     catch (std::regex_error& e)
@@ -44,10 +45,12 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
 {
     std::string str;
     int end_found = 0;
+    int line = 0;
     while(!end_found)
     {
-        getline (std::cin, str); 
-        if (is_valid_command(str, end_found) == 1)
+        getline (std::cin, str);
+        line++; 
+        if (is_valid_command(str, end_found, line) == 1)
             commands.push_back(str);
     }
     for (auto &s : commands)
@@ -69,6 +72,12 @@ void parser(std::list<std::string> &commands, Stack<IOperand*> &mystack)
             mystack.mod();
         else if (std::regex_search(str, std::regex("^print")))
             mystack.print();
+        else if (std::regex_search(str, std::regex("^and")))
+            mystack.b_and();
+        else if (std::regex_search(str, std::regex("^or")))
+            mystack.b_or();
+        else if (std::regex_search(str, std::regex("^xor")))
+            mystack.b_xor();
         else if (std::regex_search(str, std::regex("^pop")))
         {
             if (mystack.size() == 0)
